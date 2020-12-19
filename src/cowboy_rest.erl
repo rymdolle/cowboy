@@ -1576,6 +1576,15 @@ expect(Req, State, Callback, Expected, OnTrue, OnFalse) ->
 			next(Req2, State2, OnFalse)
 	end.
 
+call(Req0, State, Callback) when is_function(Callback, 2) ->
+    try Callback(Req0, State#state.handler_state) of
+        no_call ->
+            no_call;
+        {Result, Req, HandlerState} ->
+            {Result, Req, State#state{handler_state = HandlerState}}
+    catch Class:Reason:Stacktrace ->
+            error_terminate(Req0, State, Class, Reason, Stacktrace)
+    end;
 call(Req0, State=#state{handler=Handler,
 		handler_state=HandlerState0}, Callback) ->
 	case erlang:function_exported(Handler, Callback, 2) of
